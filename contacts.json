@@ -1,17 +1,7 @@
 [
     {
-        "name": "Krishna",
-        "phone": "709135487",
-        "email": "krishna@gmail.com"
-    },
-    {
-        "name": "Vansh",
-        "phone": "4878455411",
-        "email": "vanshsinghal025@gmail.com"
-    },
-    {
-        "name": "Utkarsh",
-        "phone": "821454851",
-        "email": "utkrash@gmail.com"
+        "name": "Aman",
+        "phone": "999",
+        "email": "aman@test.com"
     }
 ]

@@ -1,109 +1,95 @@
 import os
 import json
-
-try:
-    with open("contacts.json", "r") as file:
-        contacts = json.load(file)
-except FileExistsError:
-    contacts = []
+import csv
     
 def save_contacts(contacts):
     with open("contacts.json", "w") as file:
         json.dump(contacts, file, indent=4)
-
-def add_contact(contacts):
-    name = input("Enter name: ")
-    phone = input("Enter phone: ")
-    email = input("Enter email: ")
     
+def load_contacts():
+    try:
+        with open("contacts.json", "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+    
+def add_contact(contacts, name, phone, email):
     contact = {
         "name": name,
         "phone": phone,
         "email": email
-        
     }
-    
     contacts.append(contact)
     save_contacts(contacts)
+    return "Contact added"
+
+
+def search_contact(contacts, query):
+    results = []
     
-    print("Contact added!")
+    for contact in contacts:
+        if query.lower() in contact["name"].lower():
+            results.append(contact)
     
+    return results
+
+
+def delete_contact(contacts, index):
+    if 0 <= index < len(contacts):
+        removed = contacts.pop(index)
+        save_contacts(contacts)
+        return removed
+    return None
+
 def view_contact(contacts):
     if not contacts:
-        print("No contacts yet")
-        return
+        return[]
     
-    for i, contact in enumerate(contacts, start=1):
-        print(f"{i}. Name: {contact['name']} | Phone: {contact['phone']} | Email: {contact['email']}")
+    return contacts
 
-def search_contact(contacts):
-    query = input("Enter name to search: ").lower()
-    
-    found = False
-    
-    for i, contact in enumerate(contacts, start=1):
-        if query in contact["name"].lower():
-            print(f"{i}.{contact['name']} | {contact['phone']} | {contact['email']}")
-            found = True
-            
-    if not found:
-        print("No matching contact found")
+def edit_contact(contacts, index, new_name, new_phone, new_email):
+    if 0 <= index < len(contacts):
+        contact = contacts[index]
         
-def edit_contact(contacts):
+        if new_name:
+            contact["name"] = new_name
+        if new_phone:
+            contact["phone"] = new_phone
+        if new_email:
+            contact["email"] = new_email
+        
+        save_contacts(contacts)
+        return contact
+    
+    return None
+
+
+def export_to_csv(contacts, mode, index=None):
     if not contacts:
-        print("No contacts to edit")
-        return
+        return "No contacts"
     
-    view_contact(contacts)
-    
-    index = get_valid_index(contacts, "Enter contact number to edit: ")
-    
-    contact = contacts[index]
-    
-    print("\nLeave blank to keep old value")
-    
-    new_name = input(f"Enter new name ({contact['name']}): ")
-    new_phone = input(f"Enter new phone ({contact['phone']}): ")
-    new_email = input(f"Enter new email ({contact['email']}): ")
-    
-    if new_name:
-        contact["name"] = new_name
-            
-    if new_phone:
-        contact["phone"] = new_phone
+    with open("contacts.csv", "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Name", "Phone", "Email"])
         
-    if new_email:
-        contact["email"]  = new_email
+        if mode == "one" and index is not None:
+            contact = contacts[index]
+            writer.writerow([
+                contact["name"],
+                contact["phone"],
+                contact["email"]
+            ])
         
-    print("Contact updated")
-    save_contacts(contacts)
+        elif mode == "all":
+            for contact in contacts:
+                writer.writerow([
+                    contact["name"],
+                    contact["phone"],
+                    contact["email"]
+                ])
     
-def get_valid_index(contacts, message):
-    while True:
-        try:
-            index = int(input(message)) -1
-            
-            if 0 <= index < len(contacts):
-                return index
-            else:
-                print("Invalid index")
-                
-        except ValueError:
-            print("Please enter a valid number")
-            
-def delete_contact(contacts):
-    if not contacts:
-        print("No contact yet")
-        return
-    
-    view_contact(contacts)
-    
-    index = get_valid_index(contacts, "Enter contact number to delete: ")
-    
-    removed = contacts.pop(index)
-    save_contacts(contacts)
-    
-    print(f"Deleted: {removed['name']}")
+    return "Exported successfully"
+        
     
 def main():
     while True:
@@ -118,26 +104,83 @@ def main():
         print("4. Delete Contact")
         print("5. Edit Contact")
         print("6. Exit")
-        
+        print("7. Export to CSV")
         choice = input("Enter choice: ")
         
         if choice == "1":
-            add_contact(contacts)
-        elif choice == "2":
-            view_contact(contacts)
-        elif choice == "3":
-            search_contact(contacts)
-        elif choice == "4":
-            delete_contact(contacts)
-        elif choice == "5":
-            edit_contact(contacts)
-        elif choice == "6":
-            print("Exiting....")
-            break
-        
-        else:
-            print("Invalid choice")
+            name = input("Enter name: ")
+            phone = input("Enter phone: ")
+            email = input("Enter email: ")
             
+            msg = add_contact(contacts, name, phone, email)
+            print(msg)
+            
+        elif choice == "2":
+            contacts_list = view_contact(contacts)
+
+            if not contacts_list:
+                print("No contact yet")
+            else:
+                for i, contact in enumerate(contacts_list, start=1):
+                    print(f"{i}. Name: {contact['name']} | Phone: {contact['phone']} | Email: {contact['email']}")
+            
+
+        elif choice == "3":
+            query = input("Enter name: ")
+            results = search_contact(contacts, query)
+        
+            if results:
+                for i, c in enumerate(results, 1):
+                    print(f"{i}. {c['name']} | {c['phone']} | {c['email']}")
+            else:
+                print("No match")
+
+        elif choice == "4":
+            view_contact(contacts)
+            index = int(input("Enter index: ")) - 1
+            
+            removed = delete_contact(contacts, index)
+            if removed:
+                print("Deleted:", removed["name"])
+            else:
+                print("Invalid index")
+
+            try:
+                index = int(input("Enter index: ")) - 1
+            except ValueError:
+                print("Invalid input")
+            continue
+        elif choice == "5":
+            view_contact(contacts)
+            index = int(input("Enter index: ")) - 1
+            
+            new_name = input("New name: ")
+            new_phone = input("New phone: ")
+            new_email = input("New email: ")
+            
+            updated = edit_contact(contacts, index, new_name, new_phone, new_email)
+            
+            if updated:
+                print("Updated")
+            else:
+                print("Invalid index")
+                
+        elif choice == "6":
+            print("Exiting...")
+            break
+
+        elif choice == "7":
+            mode = input("1. One\n2. All\nChoice: ")
+            
+            if mode == "1":
+                view_contact(contacts)
+                index = int(input("Enter index: ")) - 1
+                msg = export_to_csv(contacts, "one", index)
+            else:
+                msg = export_to_csv(contacts, "all")
+            
+            print(msg)
+        
         input("\nPress Enter to continue...")
         
 if __name__ == "__main__":
