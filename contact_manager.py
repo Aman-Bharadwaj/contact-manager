@@ -1,6 +1,7 @@
 import os
 import json
 import csv
+
     
 def save_contacts(contacts):
     with open("contacts.json", "w") as file:
@@ -24,14 +25,19 @@ def add_contact(contacts, name, phone, email):
     return "Contact added"
 
 
-def search_contact(contacts, query):
+def search_contacts(query):
+    contacts = load_contacts()
+
     results = []
-    
     for contact in contacts:
-        if query.lower() in contact["name"].lower():
+        if (
+            query.lower() in contact["name"].lower()
+            or query.lower() in contact["phone"]
+            or (contact["email"] and query.lower() in contact["email"].lower())
+        ):
             results.append(contact)
-    
-    return results
+
+    return {"status": "success", "data": results}
 
 
 def delete_contact(contacts, index):
@@ -111,6 +117,8 @@ def main():
             name = input("Enter name: ")
             phone = input("Enter phone: ")
             email = input("Enter email: ")
+            
+            contacts = contacts[index]
             
             msg = add_contact(contacts, name, phone, email)
             print(msg)
