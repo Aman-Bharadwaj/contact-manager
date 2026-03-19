@@ -12,5 +12,7 @@ Tech Used:
 - JSON (for storage)
 
 Features:
-- REST-like API endpoints
-- Data persistence using JSON
+- CRUD API
+- Search contacts
+- Filter contacts
+- Modular architecture (routes, services, utils)
